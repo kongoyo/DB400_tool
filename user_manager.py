@@ -222,13 +222,7 @@ class UserManagerGUI(QWidget):
         if dialog.exec_():
             user_info = dialog.get_user_info()
             try:
-                self.user_manager.create_user(
-                    user_info["username"],
-                    user_info["password"],
-                    user_info["description"],
-                    user_info["user_class"],
-                    user_info["special_authorities"]
-                )
+                self.user_manager.create_user(**user_info)  # 使用字典解包
                 QMessageBox.information(self, "成功", f"用戶 {user_info['username']} 已成功創建")
                 self.refresh_user_list()
             except Exception as e:

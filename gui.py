@@ -279,7 +279,7 @@ class AS400ConnectorGUI(QMainWindow):
             self.connect_button.setEnabled(False)  # 禁用連接按鈕
 
     def connect_to_as400(self):
-        logging.info("嘗試連接到 AS400，主機: %s", self.host_input.text())  # 日誌紀錄
+        # logging.info("嘗試連接到 AS400，主機: %s", self.host_input.text())  # 日誌紀錄
         host = self.host_input.text()
         user = self.user_input.text()
         password = self.password_input.text()
@@ -632,11 +632,11 @@ class AS400ConnectorGUI(QMainWindow):
             
             self.job_table.resizeColumnsToContents()
         else:
-            QMessageBox.warning(self, "錯誤", "獲取活動作業列表失敗")
+            QMessageBox.warning(self, "錯誤", "獲取活動作���列表失敗")
 
     def end_selected_job(self):
         if self.as400_connector.current_connection in self.job_managers:
-            self.job_managers[self.as400_connector.current_connection].select_job_dialog("結��")
+            self.job_managers[self.as400_connector.current_connection].select_job_dialog("結")
         else:
             QMessageBox.warning(self, "錯誤", "未連接到系統或 JobManager 未初始化")
 
