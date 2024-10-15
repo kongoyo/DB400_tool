@@ -1,5 +1,6 @@
 import os
 import sys
+from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, 
                                QPlainTextEdit, QMessageBox, QTableWidget, QTableWidgetItem, QFileDialog, QComboBox, 
                                QStyledItemDelegate, QStackedWidget, QDialog, QDialogButtonBox, QFrame)
@@ -11,9 +12,15 @@ from system_monitor import SystemMonitorGUI
 from user_manager import UserManager, UserManagerGUI
 from job_manager import JobManager, JobManagerGUI
 from utils import force_quit, setup_environment
+import logging  # 添加此行以導入 logging 模組
+
+
+# 設置日誌紀錄
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class CustomItemDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
+        logging.info("繪製項目: %s", index.data())  # 日誌紀錄
         if index.data(Qt.UserRole) == "category":
             option.font.setBold(True)
             option.font.setPointSize(option.font.pointSize() + 2)
@@ -22,10 +29,11 @@ class CustomItemDelegate(QStyledItemDelegate):
 
 class AS400ConnectorGUI(QMainWindow):
     connection_successful = Signal(object)  
-    
-    def __init__(self):
+
+    def __init__(self, jt400_path):  # 修改此行以接受 jt400_path
+        logging.info("初始化 AS400ConnectorGUI，jt400_path: %s", jt400_path)  # 日誌紀錄
         super().__init__()
-        setup_environment()
+        setup_environment(jt400_path)  # 傳遞 jt400_path
         self.as400_connector = AS400Connector()
         self.result = None
         self.connection_error = None
@@ -264,56 +272,47 @@ class AS400ConnectorGUI(QMainWindow):
         layout.addWidget(self.export_button)
 
     def update_connect_button_color(self):
+        # 檢查輸入欄位是否都有填寫
         if self.host_input.text() and self.user_input.text() and self.password_input.text():
-            self.connect_button.setStyleSheet("""
-                QPushButton {
-                    background-color: #63B3ED;
-                    color: #FFFFFF;
-                    border: none;
-                    border-radius: 5px;
-                    padding: 8px 15px;
-                }
-                QPushButton:hover {
-                    background-color: #4299E1;
-                }
-            """)
+            self.connect_button.setEnabled(True)  # 啟用連接按鈕
         else:
-            self.connect_button.setStyleSheet("""
-                QPushButton {
-                    background-color: #A0AEC0;
-                    color: #FFFFFF;
-                    border: none;
-                    border-radius: 5px;
-                    padding: 8px 15px;
-                }
-            """)
+            self.connect_button.setEnabled(False)  # 禁用連接按鈕
 
     def connect_to_as400(self):
+        logging.info("嘗試連接到 AS400，主機: %s", self.host_input.text())  # 日誌紀錄
         host = self.host_input.text()
         user = self.user_input.text()
         password = self.password_input.text()
 
+        # 檢查是否有必要的輸入
         if not host or not user or not password:
             QMessageBox.warning(self, "輸入錯誤", "請填寫所有必要的連接信息")
-            return
+            return  # 跳過連接
 
+        # 檢查是否已經連接到相同的主機
+        if self.current_connection == host:
+            QMessageBox.warning(self, "已連接", f"已經連接到 {host}")
+            return  # 跳過連接
+
+        # 嘗試連接
         connection, error = self.as400_connector.connect_to_as400(host, user, password)
         if connection:
             QMessageBox.information(self, "連接成功", f"已成功連接到IBM i系統: {host}")
             self.statusBar().showMessage(f"成功連接到 {host}")
-            self.connect_button.setEnabled(False)
-            self.disconnect_button.setEnabled(True)
-            self.execute_button.setEnabled(True)
-            
-            if self.system_combo.findText(host) == -1:
-                self.system_combo.addItem(host)
-            self.system_combo.setCurrentText(host)
-            
+
             # 清空輸入欄位
             self.host_input.clear()
             self.user_input.clear()
             self.password_input.clear()
-            
+
+            self.connect_button.setEnabled(False)
+            self.disconnect_button.setEnabled(True)
+            self.execute_button.setEnabled(True)
+
+            if self.system_combo.findText(host) == -1:
+                self.system_combo.addItem(host)
+            self.system_combo.setCurrentText(host)
+
             self.connection_error = None
             self.current_connection = host
             user_manager = UserManager(connection)
@@ -324,7 +323,6 @@ class AS400ConnectorGUI(QMainWindow):
             if host in self.job_managers:
                 self.job_managers[host].enable_refresh()
         else:
-            self.connection_error = error
             QMessageBox.critical(self, "連接失敗", f"無法連接到 {host}: {error}")
             self.statusBar().showMessage("連接失敗")
     def show_disconnect_dialog(self):
@@ -354,6 +352,7 @@ class AS400ConnectorGUI(QMainWindow):
             self.disconnect_from_as400(selected_host)
 
     def disconnect_from_as400(self, host):
+        logging.info("斷開連接: %s", host)  # 日誌紀錄
         success, error = self.as400_connector.disconnect_from_as400(host)
         if success:
             index = self.system_combo.findText(host)
@@ -392,6 +391,7 @@ class AS400ConnectorGUI(QMainWindow):
             QMessageBox.warning(self, "切換失敗", f"無法切換到系統: {selected_system}")
 
     def execute_query(self):
+        logging.info("執行查詢: %s", self.query_input.toPlainText())  # 日誌紀錄
         if not self.as400_connector.current_connection:
             QMessageBox.warning(self, "無連接", "請先連接到系統")
             return
@@ -422,6 +422,7 @@ class AS400ConnectorGUI(QMainWindow):
             self.statusBar().showMessage("查詢執行失敗")
 
     def export_results(self):
+        logging.info("匯出結果")  # 日誌紀錄
         if not self.result:
             QMessageBox.warning(self, "無結果", "沒有可匯出的查詢結果")
             return
@@ -635,7 +636,7 @@ class AS400ConnectorGUI(QMainWindow):
 
     def end_selected_job(self):
         if self.as400_connector.current_connection in self.job_managers:
-            self.job_managers[self.as400_connector.current_connection].select_job_dialog("結束")
+            self.job_managers[self.as400_connector.current_connection].select_job_dialog("結��")
         else:
             QMessageBox.warning(self, "錯誤", "未連接到系統或 JobManager 未初始化")
 
@@ -657,10 +658,9 @@ class AS400ConnectorGUI(QMainWindow):
 
     def disable_user_dialog(self):
         if self.as400_connector.current_connection in self.user_managers:
-            self.user_managers[self.as400_connector.current_connection].disable_user_dialog()
+            self.user_managers[self.as400_connector.current_connection].disable_user        
         else:
             QMessageBox.warning(self, "錯誤", "未連接到系統或 UserManager 未初始化")
-
     def enable_user_dialog(self):
         if self.as400_connector.current_connection in self.user_managers:
             self.user_managers[self.as400_connector.current_connection].enable_user_dialog()
@@ -683,3 +683,10 @@ class AS400ConnectorGUI(QMainWindow):
             self.user_managers[self.as400_connector.current_connection].show_user_spool_files()
         else:
             QMessageBox.warning(self, "錯誤", "未連接到系統或 UserManager 未初始化")
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)  # 创建 QApplication 实例
+    jt400_path = "your_path_here"  # 替换为实际路径
+    window = AS400ConnectorGUI(jt400_path)  # 创建主窗口
+    window.show()  # 显示主窗口
+    sys.exit(app.exec())  # 进入应用程序主循环

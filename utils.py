@@ -7,14 +7,11 @@ def force_quit():
     QCoreApplication.quit()
     sys.exit(0)
 
-jt400_path = "/Users/clark/Desktop/DDSC/Clark文件/13-JavaCode/jt400.jar"
-java_home = "/Library/Java/JavaVirtualMachines/jdk-22.jdk/Contents/Home"
-
-def setup_environment():
+def setup_environment(jt400_path):  # 添加 jt400_path 參數
     if not os.path.exists(jt400_path):
         print(f"錯誤：jt400.jar 文件未找到：{jt400_path}")
-        sys.exit(1)
-    
-    os.environ["JAVA_HOME"] = java_home
-    os.environ["PATH"] = f"{java_home}/bin:{os.environ.get('PATH', '')}"
-    os.environ["CLASSPATH"] = f"{jt400_path}:{os.environ.get('CLASSPATH', '')}"
+        sys.exit(1)  # 如果文件不存在，退出程序
+
+    # 確保 CLASSPATH 正確設置
+    current_classpath = os.environ.get('CLASSPATH', '')
+    os.environ["CLASSPATH"] = f"{jt400_path}:{current_classpath}" if current_classpath else jt400_path

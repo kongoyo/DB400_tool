@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTableWidget, QLineEdit, QComboBox, QTabWidget, QTableWidgetItem, QMessageBox
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt
-from as400_connector import execute_query
+from as400_connector import AS400Connector  # 導入類
 
 class SystemMonitorGUI(QWidget):
     def __init__(self, parent):
