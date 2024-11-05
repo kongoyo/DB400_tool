@@ -7014,3 +7014,12 @@ jt400-20.0.7.jar
 .venv/Scripts/pyrcc5.exe
 .venv/Scripts/pyuic5.exe
 jt400.jar
+.venv/Lib/site-packages/pip-24.3.1.dist-info/AUTHORS.txt
+.venv/Lib/site-packages/pip-24.3.1.dist-info/entry_points.txt
+.venv/Lib/site-packages/pip-24.3.1.dist-info/INSTALLER
+.venv/Lib/site-packages/pip-24.3.1.dist-info/LICENSE.txt
+.venv/Lib/site-packages/pip-24.3.1.dist-info/METADATA
+.venv/Lib/site-packages/pip-24.3.1.dist-info/RECORD
+.venv/Lib/site-packages/pip-24.3.1.dist-info/REQUESTED
+.venv/Lib/site-packages/pip-24.3.1.dist-info/top_level.txt
+.venv/Lib/site-packages/pip-24.3.1.dist-info/WHEEL
